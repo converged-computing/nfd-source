@@ -94,7 +94,7 @@ func (w *FsWatcher) add(names ...string) error {
 		for p := name; ; p = filepath.Dir(p) {
 			if _, ok := w.paths[p]; !ok {
 				if err := w.Add(p); err != nil {
-					slog.Error(err, "failed to add fsnotify watch", "path", p)
+					slog.Any(fmt.Sprintf("failed to add fsnotify watch path %s", p), err)
 				} else {
 					slog.Info("added fsnotify watch", "path", p)
 					added = true
@@ -144,12 +144,12 @@ func (w *FsWatcher) watch() {
 				slog.Info("watcher closed")
 				return
 			}
-			slog.Error(e, "fswatcher error event detected")
+			slog.Any("fswatcher error event detected", e)
 
 		case <-ratelimiter:
 			// Blindly remove existing watch and add a new one
 			if err := w.reset(w.names...); err != nil {
-				slog.Error(err, "re-trying in 60 seconds")
+				slog.Any("re-trying in 60 seconds", err)
 				ratelimiter = time.After(60 * time.Second)
 			}
 

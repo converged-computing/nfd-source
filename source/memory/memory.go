@@ -87,14 +87,14 @@ func (s *memorySource) Discover() error {
 
 	// Detect NUMA
 	if numa, err := detectNuma(); err != nil {
-		slog.Error(err, "failed to detect NUMA nodes")
+		slog.Any("failed to detect NUMA nodes", err)
 	} else {
 		s.features.Attributes[NumaFeature] = nfdv1alpha1.AttributeFeatureSet{Elements: numa}
 	}
 
 	// Detect NVDIMM
 	if nv, err := detectNv(); err != nil {
-		slog.Error(err, "failed to detect nvdimm devices")
+		slog.Any("failed to detect nvdimm devices", err)
 	} else {
 		s.features.Instances[NvFeature] = nfdv1alpha1.InstanceFeatureSet{Elements: nv}
 	}
@@ -157,7 +157,7 @@ func readNdDeviceInfo(path string) nfdv1alpha1.InstanceFeature {
 	for _, attrName := range ndDevAttrs {
 		data, err := os.ReadFile(filepath.Join(path, attrName))
 		if err != nil {
-			slog.Error(err, "failed to read nd device attribute", "attributeName", attrName)
+			slog.Any(fmt.Sprintf("failed to read nd device attribute attributeName %s", attrName), err)
 			continue
 		}
 		attrs[attrName] = strings.TrimSpace(string(data))

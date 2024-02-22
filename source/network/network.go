@@ -85,7 +85,7 @@ func (s *networkSource) GetLabels() (source.FeatureLabels, error) {
 			if v, ok := attrs[attr]; ok {
 				t, err := strconv.Atoi(v)
 				if err != nil {
-					slog.Error(err, "failed to parse sriov attribute", "attributeName", attr, "deviceName", attrs["name"])
+					slog.Any(fmt.Sprintf("failed to parse sriov attribute attributeName %s deviceName %s", attr, attrs["name"]), err)
 					continue
 				}
 				if t > 0 {
@@ -151,7 +151,7 @@ func readIfaceInfo(path string, attrFiles []string) nfdv1alpha1.InstanceFeature 
 		data, err := os.ReadFile(filepath.Join(path, attrFile))
 		if err != nil {
 			if !os.IsNotExist(err) && !errors.Is(err, syscall.EINVAL) {
-				slog.Error(err, "failed to read net iface attribute", "attributeName", attrFile)
+				slog.Any(fmt.Sprintf("failed to read net iface attribute attributeName %s", attrFile), err)
 			}
 			continue
 		}

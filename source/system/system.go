@@ -18,6 +18,7 @@ package system
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"regexp"
 	"strings"
@@ -81,14 +82,17 @@ func (s *systemSource) GetLabels() (source.FeatureLabels, error) {
 func (s *systemSource) Discover() error {
 	s.features = nfdv1alpha1.NewFeatures()
 
+	// If we are running on a node...
+	nodeName := os.Getenv("NODE_NAME")
+
 	// Get node name
 	s.features.Attributes[NameFeature] = nfdv1alpha1.NewAttributeFeatures(nil)
-	s.features.Attributes[NameFeature].Elements["nodename"] = utils.NodeName()
+	s.features.Attributes[NameFeature].Elements["nodename"] = nodeName
 
 	// Get os-release information
 	release, err := parseOSRelease()
 	if err != nil {
-		slog.Error(err, "failed to get os-release")
+		slog.Any("failed to get os-release", err)
 	} else {
 		s.features.Attributes[OsReleaseFeature] = nfdv1alpha1.NewAttributeFeatures(release)
 
@@ -108,7 +112,7 @@ func (s *systemSource) Discover() error {
 	for _, name := range dmiIDAttributeNames {
 		val, err := getDmiIDAttribute(name)
 		if err != nil {
-			slog.Error(err, "failed to get DMI entry", "attributeName", name)
+			slog.Any(fmt.Sprintf("failed to get DMI entry attributeName %s", name), err)
 		} else {
 			dmiAttrs[name] = val
 		}
