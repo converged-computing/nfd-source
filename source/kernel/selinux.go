@@ -20,9 +20,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"k8s.io/klog/v2"
+	"golang.org/x/exp/slog"
 
-	"sigs.k8s.io/node-feature-discovery/pkg/utils/hostpath"
+	"github.com/converged-computing/nfd-source/pkg/utils/hostpath"
 )
 
 // SelinuxEnabled detects if selinux has been enabled in the kernel
@@ -34,7 +34,7 @@ func SelinuxEnabled() (bool, error) {
 
 	selinuxBase := filepath.Join(sysfsBase, "selinux")
 	if _, err := os.Stat(selinuxBase); os.IsNotExist(err) {
-		klog.V(1).InfoS("selinux not available on the system")
+		slog.Info("selinux not available on the system")
 		return false, nil
 	}
 

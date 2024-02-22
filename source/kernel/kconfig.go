@@ -25,7 +25,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"sigs.k8s.io/node-feature-discovery/pkg/utils/hostpath"
+	"github.com/converged-computing/nfd-source/pkg/utils/hostpath"
 )
 
 // Read gzipped kernel config

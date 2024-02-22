@@ -23,12 +23,11 @@ import (
 	"strconv"
 	"strings"
 
-	"k8s.io/klog/v2"
-
-	nfdv1alpha1 "sigs.k8s.io/node-feature-discovery/pkg/apis/nfd/v1alpha1"
-	"sigs.k8s.io/node-feature-discovery/pkg/utils"
-	"sigs.k8s.io/node-feature-discovery/pkg/utils/hostpath"
-	"sigs.k8s.io/node-feature-discovery/source"
+	nfdv1alpha1 "github.com/converged-computing/nfd-source/pkg/apis/nfd/v1alpha1"
+	"github.com/converged-computing/nfd-source/pkg/utils"
+	"github.com/converged-computing/nfd-source/pkg/utils/hostpath"
+	"github.com/converged-computing/nfd-source/source"
+	"golang.org/x/exp/slog"
 )
 
 // Name of this feature source
@@ -88,19 +87,19 @@ func (s *memorySource) Discover() error {
 
 	// Detect NUMA
 	if numa, err := detectNuma(); err != nil {
-		klog.ErrorS(err, "failed to detect NUMA nodes")
+		slog.Error(err, "failed to detect NUMA nodes")
 	} else {
 		s.features.Attributes[NumaFeature] = nfdv1alpha1.AttributeFeatureSet{Elements: numa}
 	}
 
 	// Detect NVDIMM
 	if nv, err := detectNv(); err != nil {
-		klog.ErrorS(err, "failed to detect nvdimm devices")
+		slog.Error(err, "failed to detect nvdimm devices")
 	} else {
 		s.features.Instances[NvFeature] = nfdv1alpha1.InstanceFeatureSet{Elements: nv}
 	}
 
-	klog.V(3).InfoS("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
+	slog.Info("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
 
 	return nil
 }
@@ -135,7 +134,7 @@ func detectNv() ([]nfdv1alpha1.InstanceFeature, error) {
 
 	devices, err := os.ReadDir(sysfsBasePath)
 	if os.IsNotExist(err) {
-		klog.V(1).InfoS("No NVDIMM devices present")
+		slog.Info("No NVDIMM devices present")
 		return info, nil
 	} else if err != nil {
 		return nil, fmt.Errorf("failed to list nvdimm devices: %w", err)
@@ -158,7 +157,7 @@ func readNdDeviceInfo(path string) nfdv1alpha1.InstanceFeature {
 	for _, attrName := range ndDevAttrs {
 		data, err := os.ReadFile(filepath.Join(path, attrName))
 		if err != nil {
-			klog.V(3).ErrorS(err, "failed to read nd device attribute", "attributeName", attrName)
+			slog.Error(err, "failed to read nd device attribute", "attributeName", attrName)
 			continue
 		}
 		attrs[attrName] = strings.TrimSpace(string(data))

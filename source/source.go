@@ -21,7 +21,7 @@ package source
 import (
 	"fmt"
 
-	nfdv1alpha1 "sigs.k8s.io/node-feature-discovery/pkg/apis/nfd/v1alpha1"
+	nfdv1alpha1 "github.com/converged-computing/nfd-source/pkg/apis/nfd/v1alpha1"
 )
 
 // Source is the base interface for all other source interfaces

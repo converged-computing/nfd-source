@@ -21,10 +21,10 @@ import (
 	"runtime"
 	"testing"
 
+	nfdv1alpha1 "github.com/converged-computing/nfd-source/pkg/apis/nfd/v1alpha1"
+	"github.com/converged-computing/nfd-source/pkg/utils/hostpath"
+	"github.com/converged-computing/nfd-source/source"
 	"github.com/stretchr/testify/assert"
-	nfdv1alpha1 "sigs.k8s.io/node-feature-discovery/pkg/apis/nfd/v1alpha1"
-	"sigs.k8s.io/node-feature-discovery/pkg/utils/hostpath"
-	"sigs.k8s.io/node-feature-discovery/source"
 )
 
 var packagePath string

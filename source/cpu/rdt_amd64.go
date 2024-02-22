@@ -26,9 +26,9 @@ import (
 	"strconv"
 
 	"github.com/opencontainers/runc/libcontainer/intelrdt"
-	"k8s.io/klog/v2"
+	"golang.org/x/exp/slog"
 
-	"sigs.k8s.io/node-feature-discovery/pkg/cpuid"
+	"github.com/converged-computing/nfd-source/pkg/cpuid"
 )
 
 const (
@@ -105,26 +105,26 @@ func discoverRDT() map[string]string {
 func getNumClosID(level string) int64 {
 	resctrlRootDir, err := intelrdt.Root()
 	if err != nil {
-		klog.V(4).ErrorS(err, "can't find resctrl filesystem")
+		slog.Error(err, "can't find resctrl filesystem")
 		return -1
 	}
 
 	closidFile := filepath.Join(resctrlRootDir, "info", level, "num_closids")
 
 	if _, err := os.Stat(closidFile); err != nil {
-		klog.V(4).ErrorS(err, "failed to stat file", "path", closidFile)
+		slog.Error(err, "failed to stat file", "path", closidFile)
 		return -1
 	}
 
 	closidsBytes, err := os.ReadFile(filepath.Join(resctrlRootDir, "info", level, "num_closids"))
 	if err != nil {
-		klog.V(4).ErrorS(err, "failed to read file", "path", closidFile)
+		slog.Error(err, "failed to read file", "path", closidFile)
 		return -1
 	}
 
 	numClosIDs, err := strconv.ParseInt(string(bytes.TrimSpace(closidsBytes)), 10, 64)
 	if err != nil {
-		klog.V(4).ErrorS(err, "failed to parse num_closids", "value", string(bytes.TrimSpace(closidsBytes)))
+		slog.Error(err, "failed to parse num_closids", "value", string(bytes.TrimSpace(closidsBytes)))
 		return -1
 	}
 

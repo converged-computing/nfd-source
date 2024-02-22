@@ -22,10 +22,10 @@ import (
 	"strconv"
 	"strings"
 
-	"k8s.io/klog/v2"
+	"golang.org/x/exp/slog"
 
-	"sigs.k8s.io/node-feature-discovery/pkg/cpuid"
-	"sigs.k8s.io/node-feature-discovery/pkg/utils/hostpath"
+	"github.com/converged-computing/nfd-source/pkg/cpuid"
+	"github.com/converged-computing/nfd-source/pkg/utils/hostpath"
 )
 
 const (
@@ -37,7 +37,7 @@ func discoverSST() map[string]string {
 	features := make(map[string]string)
 
 	if bf, err := discoverSSTBF(); err != nil {
-		klog.ErrorS(err, "failed to detect SST-BF")
+		slog.Error(err, "failed to detect SST-BF")
 	} else if bf {
 		features["bf.enabled"] = strconv.FormatBool(bf)
 	}

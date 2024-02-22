@@ -23,9 +23,9 @@ import (
 	"strconv"
 	"strings"
 
-	"k8s.io/klog/v2"
+	"golang.org/x/exp/slog"
 
-	"sigs.k8s.io/node-feature-discovery/pkg/utils/hostpath"
+	"github.com/converged-computing/nfd-source/pkg/utils/hostpath"
 )
 
 // Discover if c-states are enabled
@@ -39,7 +39,7 @@ func detectCstate() (map[string]string, error) {
 	}
 	cpuidleDir := filepath.Join(sysfsBase, "cpuidle")
 	if _, err := os.Stat(cpuidleDir); os.IsNotExist(err) {
-		klog.V(1).InfoS("cpuidle disabled in the kernel")
+		slog.Info("cpuidle disabled in the kernel")
 		return cstate, nil
 	}
 
@@ -51,7 +51,7 @@ func detectCstate() (map[string]string, error) {
 
 	if d := strings.TrimSpace(string(driver)); d != "intel_idle" {
 		// Currently only checking intel_idle driver for cstates
-		klog.V(1).InfoS("intel_idle driver is not in use", "currentIdleDriver", d)
+		slog.Info("intel_idle driver is not in use", "currentIdleDriver", d)
 		return cstate, nil
 	}
 

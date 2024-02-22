@@ -22,12 +22,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"k8s.io/klog/v2"
+	"golang.org/x/exp/slog"
 
-	nfdv1alpha1 "sigs.k8s.io/node-feature-discovery/pkg/apis/nfd/v1alpha1"
-	"sigs.k8s.io/node-feature-discovery/pkg/utils"
-	"sigs.k8s.io/node-feature-discovery/pkg/utils/hostpath"
-	"sigs.k8s.io/node-feature-discovery/source"
+	nfdv1alpha1 "github.com/converged-computing/nfd-source/pkg/apis/nfd/v1alpha1"
+	"github.com/converged-computing/nfd-source/pkg/utils"
+	"github.com/converged-computing/nfd-source/pkg/utils/hostpath"
+	"github.com/converged-computing/nfd-source/source"
 )
 
 // Name of this feature source
@@ -81,7 +81,7 @@ func (s *storageSource) Discover() error {
 	}
 	s.features.Instances[BlockFeature] = nfdv1alpha1.InstanceFeatureSet{Elements: devs}
 
-	klog.V(3).InfoS("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
+	slog.Info("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
 
 	return nil
 }
@@ -116,7 +116,7 @@ func readBlockDevQueueInfo(path string) *nfdv1alpha1.InstanceFeature {
 	for _, attrName := range queueAttrs {
 		data, err := os.ReadFile(filepath.Join(path, "queue", attrName))
 		if err != nil {
-			klog.V(3).ErrorS(err, "failed to read block device queue attribute", "attributeName", attrName)
+			slog.Error(err, "failed to read block device queue attribute", "attributeName", attrName)
 			continue
 		}
 		attrs[attrName] = strings.TrimSpace(string(data))

@@ -22,15 +22,14 @@ import (
 	"strconv"
 	"strings"
 
-	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/klog/v2"
+	"golang.org/x/exp/slog"
 
 	"github.com/klauspost/cpuid/v2"
 
-	nfdv1alpha1 "sigs.k8s.io/node-feature-discovery/pkg/apis/nfd/v1alpha1"
-	"sigs.k8s.io/node-feature-discovery/pkg/utils"
-	"sigs.k8s.io/node-feature-discovery/pkg/utils/hostpath"
-	"sigs.k8s.io/node-feature-discovery/source"
+	nfdv1alpha1 "github.com/converged-computing/nfd-source/pkg/apis/nfd/v1alpha1"
+	"github.com/converged-computing/nfd-source/pkg/utils"
+	"github.com/converged-computing/nfd-source/pkg/utils/hostpath"
+	"github.com/converged-computing/nfd-source/source"
 )
 
 // Name of this feature source
@@ -168,13 +167,16 @@ func (s *cpuSource) GetLabels() (source.FeatureLabels, error) {
 	// Security
 	// skipLabel lists features that will not have labels created but are only made available for
 	// NodeFeatureRules (e.g. to be published via extended resources instead)
-	skipLabel := sets.NewString(
-		"tdx.total_keys",
-		"sgx.epc",
-		"sev.encrypted_state_ids",
-		"sev.asids")
+	// This used to be apimachinery sets, refactored to not need the entire module
+	skipLabel := map[string]bool{
+		"tdx.total_keys":          true,
+		"sgx.epc":                 true,
+		"sev.encrypted_state_ids": true,
+		"sev.asids":               true,
+	}
 	for k, v := range features.Attributes[SecurityFeature].Elements {
-		if !skipLabel.Has(k) {
+		ok, _ := skipLabel[k]
+		if !ok {
 			labels["security."+k] = v
 		}
 	}
@@ -210,7 +212,7 @@ func (s *cpuSource) Discover() error {
 	// Detect cstate configuration
 	cstate, err := detectCstate()
 	if err != nil {
-		klog.ErrorS(err, "failed to detect cstate")
+		slog.Error(err, "failed to detect cstate")
 	} else {
 		s.features.Attributes[CstateFeature] = nfdv1alpha1.NewAttributeFeatures(cstate)
 	}
@@ -218,7 +220,7 @@ func (s *cpuSource) Discover() error {
 	// Detect pstate features
 	pstate, err := detectPstate()
 	if err != nil {
-		klog.ErrorS(err, "failed to detect pstate")
+		slog.Error(err, "failed to detect pstate")
 	}
 	s.features.Attributes[PstateFeature] = nfdv1alpha1.NewAttributeFeatures(pstate)
 
@@ -237,7 +239,7 @@ func (s *cpuSource) Discover() error {
 	// Detect Coprocessor features
 	s.features.Attributes[CoprocessorFeature] = nfdv1alpha1.NewAttributeFeatures(discoverCoprocessor())
 
-	klog.V(3).InfoS("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
+	slog.Info("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
 
 	return nil
 }
@@ -264,18 +266,19 @@ func discoverTopology() map[string]string {
 
 	files, err := os.ReadDir(hostpath.SysfsDir.Path("bus/cpu/devices"))
 	if err != nil {
-		klog.ErrorS(err, "failed to read devices folder")
+		slog.Error(err, "failed to read devices folder")
 		return features
 	}
 
 	ht := false
-	uniquePhysicalIDs := sets.NewString()
+	// Replaced from apiMachinery sets
+	uniquePhysicalIDs := map[string]bool{}
 
 	for _, file := range files {
 		// Try to read siblings from topology
 		siblings, err := os.ReadFile(hostpath.SysfsDir.Path("bus/cpu/devices", file.Name(), "topology/thread_siblings_list"))
 		if err != nil {
-			klog.ErrorS(err, "error while reading thread_sigblings_list file")
+			slog.Error(err, "error while reading thread_sigblings_list file")
 			return map[string]string{}
 		}
 		for _, char := range siblings {
@@ -289,15 +292,15 @@ func discoverTopology() map[string]string {
 		// Try to read physical_package_id from topology
 		physicalID, err := os.ReadFile(hostpath.SysfsDir.Path("bus/cpu/devices", file.Name(), "topology/physical_package_id"))
 		if err != nil {
-			klog.ErrorS(err, "error while reading physical_package_id file")
+			slog.Error(err, "error while reading physical_package_id file")
 			return map[string]string{}
 		}
 		id := strings.TrimSpace(string(physicalID))
-		uniquePhysicalIDs.Insert(id)
+		uniquePhysicalIDs[id] = true
 	}
 
 	features["hardware_multithreading"] = strconv.FormatBool(ht)
-	features["socket_count"] = strconv.FormatInt(int64(uniquePhysicalIDs.Len()), 10)
+	features["socket_count"] = strconv.FormatInt(int64(len(uniquePhysicalIDs)), 10)
 
 	return features
 }

@@ -20,11 +20,11 @@ import (
 	"fmt"
 	"strconv"
 
-	"k8s.io/klog/v2"
+	"golang.org/x/exp/slog"
 
-	nfdv1alpha1 "sigs.k8s.io/node-feature-discovery/pkg/apis/nfd/v1alpha1"
-	"sigs.k8s.io/node-feature-discovery/pkg/utils"
-	"sigs.k8s.io/node-feature-discovery/source"
+	nfdv1alpha1 "github.com/converged-computing/nfd-source/pkg/apis/nfd/v1alpha1"
+	"github.com/converged-computing/nfd-source/pkg/utils"
+	"github.com/converged-computing/nfd-source/source"
 )
 
 // Name of this feature source
@@ -123,7 +123,7 @@ func (s *kernelSource) Discover() error {
 
 	// Read kernel version
 	if version, err := discoverVersion(); err != nil {
-		klog.ErrorS(err, "failed to get kernel version")
+		slog.Error(err, "failed to get kernel version")
 	} else {
 		s.features.Attributes[VersionFeature] = nfdv1alpha1.NewAttributeFeatures(version)
 	}
@@ -131,7 +131,7 @@ func (s *kernelSource) Discover() error {
 	// Read kconfig
 	if realKconfig, legacyKconfig, err := parseKconfig(s.config.KconfigFile); err != nil {
 		s.legacyKconfig = nil
-		klog.ErrorS(err, "failed to read kconfig")
+		slog.Error(err, "failed to read kconfig")
 	} else {
 		s.features.Attributes[ConfigFeature] = nfdv1alpha1.NewAttributeFeatures(realKconfig)
 		s.legacyKconfig = legacyKconfig
@@ -139,27 +139,27 @@ func (s *kernelSource) Discover() error {
 
 	var enabledModules []string
 	if kmods, err := getLoadedModules(); err != nil {
-		klog.ErrorS(err, "failed to get loaded kernel modules")
+		slog.Error(err, "failed to get loaded kernel modules")
 	} else {
 		enabledModules = append(enabledModules, kmods...)
 		s.features.Flags[LoadedModuleFeature] = nfdv1alpha1.NewFlagFeatures(kmods...)
 	}
 
 	if builtinMods, err := getBuiltinModules(); err != nil {
-		klog.ErrorS(err, "failed to get builtin kernel modules")
+		slog.Error(err, "failed to get builtin kernel modules")
 	} else {
 		enabledModules = append(enabledModules, builtinMods...)
 		s.features.Flags[EnabledModuleFeature] = nfdv1alpha1.NewFlagFeatures(enabledModules...)
 	}
 
 	if selinux, err := SelinuxEnabled(); err != nil {
-		klog.ErrorS(err, "failed to detect selinux status")
+		slog.Error(err, "failed to detect selinux status")
 	} else {
 		s.features.Attributes[SelinuxFeature] = nfdv1alpha1.NewAttributeFeatures(nil)
 		s.features.Attributes[SelinuxFeature].Elements["enabled"] = strconv.FormatBool(selinux)
 	}
 
-	klog.V(3).InfoS("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
+	slog.InfoS("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
 
 	return nil
 }

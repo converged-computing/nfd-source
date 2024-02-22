@@ -25,11 +25,11 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/klog/v2"
+	"golang.org/x/exp/slog"
 
-	nfdv1alpha1 "sigs.k8s.io/node-feature-discovery/pkg/apis/nfd/v1alpha1"
-	"sigs.k8s.io/node-feature-discovery/pkg/utils"
-	"sigs.k8s.io/node-feature-discovery/source"
+	nfdv1alpha1 "github.com/converged-computing/nfd-source/pkg/apis/nfd/v1alpha1"
+	"github.com/converged-computing/nfd-source/pkg/utils"
+	"github.com/converged-computing/nfd-source/source"
 )
 
 // Name of this feature source
@@ -138,23 +138,23 @@ func (s *localSource) Discover() error {
 
 	featuresFromFiles, labelsFromFiles, err := getFeaturesFromFiles()
 	if err != nil {
-		klog.ErrorS(err, "failed to read feature files")
+		slog.Error(err, "failed to read feature files")
 	}
 
 	if s.config.HooksEnabled {
 
-		klog.InfoS("starting hooks...")
-		klog.InfoS("NOTE: hooks are deprecated and will be completely removed in a future release.")
+		slog.Info("starting hooks...")
+		slog.Info("NOTE: hooks are deprecated and will be completely removed in a future release.")
 
 		featuresFromHooks, labelsFromHooks, err := getFeaturesFromHooks()
 		if err != nil {
-			klog.ErrorS(err, "failed to run hooks")
+			slog.Error(err, "failed to run hooks")
 		}
 
 		// Merge features from hooks and files
 		for k, v := range featuresFromHooks {
 			if old, ok := featuresFromFiles[k]; ok {
-				klog.InfoS("overriding feature value", "featureKey", k, "oldValue", old, "newValue", v)
+				slog.Info("overriding feature value", "featureKey", k, "oldValue", old, "newValue", v)
 			}
 			featuresFromFiles[k] = v
 		}
@@ -162,7 +162,7 @@ func (s *localSource) Discover() error {
 		// Merge labels from hooks and files
 		for k, v := range labelsFromHooks {
 			if old, ok := labelsFromFiles[k]; ok {
-				klog.InfoS("overriding label value", "labelKey", k, "oldValue", old, "newValue", v)
+				slog.Info("overriding label value", "labelKey", k, "oldValue", old, "newValue", v)
 			}
 			labelsFromHooks[k] = v
 		}
@@ -171,7 +171,7 @@ func (s *localSource) Discover() error {
 	s.features.Attributes[LabelFeature] = nfdv1alpha1.NewAttributeFeatures(labelsFromFiles)
 	s.features.Attributes[RawFeature] = nfdv1alpha1.NewAttributeFeatures(featuresFromFiles)
 
-	klog.V(3).InfoS("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
+	slog.Info("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
 
 	return nil
 }
@@ -233,7 +233,7 @@ func parseFeatureFile(lines [][]byte, fileName string) (map[string]string, map[s
 				// Parse directives
 				err := parseDirectives(line, parsingOpts)
 				if err != nil {
-					klog.ErrorS(err, "error while parsing directives", "fileName", fileName)
+					slog.ErroS(err, "error while parsing directives", "fileName", fileName)
 				}
 
 				continue
@@ -288,13 +288,13 @@ func getFeaturesFromHooks() (map[string]string, map[string]string, error) {
 	files, err := os.ReadDir(hookDir)
 	if err != nil {
 		if os.IsNotExist(err) {
-			klog.InfoS("hook directory does not exist", "path", hookDir)
+			slog.Info("hook directory does not exist", "path", hookDir)
 			return features, labels, nil
 		}
 		return features, labels, fmt.Errorf("unable to access %v: %w", hookDir, err)
 	}
 	if len(files) > 0 {
-		klog.InfoS("hooks are DEPRECATED since v0.12.0 and support will be removed in a future release; use feature files instead")
+		slog.Info("hooks are DEPRECATED since v0.12.0 and support will be removed in a future release; use feature files instead")
 	}
 
 	for _, file := range files {
@@ -305,23 +305,23 @@ func getFeaturesFromHooks() (map[string]string, map[string]string, error) {
 		}
 		lines, err := runHook(fileName)
 		if err != nil {
-			klog.ErrorS(err, "failed to run hook", "fileName", fileName)
+			slog.Error(err, "failed to run hook", "fileName", fileName)
 			continue
 		}
 
 		// Append features
 		fileFeatures, fileLabels := parseFeatureFile(lines, fileName)
-		klog.V(4).InfoS("hook executed", "fileName", fileName, "features", utils.DelayedDumper(fileFeatures), "labels", utils.DelayedDumper(fileLabels))
+		slog.InfoS("hook executed", "fileName", fileName, "features", utils.DelayedDumper(fileFeatures), "labels", utils.DelayedDumper(fileLabels))
 		for k, v := range fileFeatures {
 			if old, ok := features[k]; ok {
-				klog.InfoS("overriding feature value from another hook", "featureKey", k, "oldValue", old, "newValue", v, "fileName", fileName)
+				slog.Info("overriding feature value from another hook", "featureKey", k, "oldValue", old, "newValue", v, "fileName", fileName)
 			}
 			features[k] = v
 		}
 
 		for k, v := range fileLabels {
 			if old, ok := labels[k]; ok {
-				klog.InfoS("overriding label value from another hook", "labelKey", k, "oldValue", old, "newValue", v, "fileName", fileName)
+				slog.Info("overriding label value from another hook", "labelKey", k, "oldValue", old, "newValue", v, "fileName", fileName)
 			}
 			labels[k] = v
 		}
@@ -337,7 +337,7 @@ func runHook(file string) ([][]byte, error) {
 	path := filepath.Join(hookDir, file)
 	filestat, err := os.Stat(path)
 	if err != nil {
-		klog.ErrorS(err, "failed to get filestat, skipping hook", "path", path)
+		slog.Error(err, "failed to get filestat, skipping hook", "path", path)
 		return lines, err
 	}
 
@@ -358,7 +358,7 @@ func runHook(file string) ([][]byte, error) {
 				// Don't print the last empty string
 				break
 			}
-			klog.InfoS(fmt.Sprintf("%s: %s", file, line))
+			slog.Info(fmt.Sprintf("%s: %s", file, line))
 		}
 
 		// Do not return any lines if an error occurred
@@ -379,7 +379,7 @@ func getFeaturesFromFiles() (map[string]string, map[string]string, error) {
 	files, err := os.ReadDir(featureFilesDir)
 	if err != nil {
 		if os.IsNotExist(err) {
-			klog.InfoS("features directory does not exist", "path", featureFilesDir)
+			slog.Info("features directory does not exist", "path", featureFilesDir)
 			return features, labels, nil
 		}
 		return features, labels, fmt.Errorf("unable to access %v: %w", featureFilesDir, err)
@@ -393,24 +393,24 @@ func getFeaturesFromFiles() (map[string]string, map[string]string, error) {
 		}
 		lines, err := getFileContent(fileName)
 		if err != nil {
-			klog.ErrorS(err, "failed to read file", "fileName", fileName)
+			slog.Error(err, "failed to read file", "fileName", fileName)
 			continue
 		}
 
 		// Append features
 		fileFeatures, fileLabels := parseFeatureFile(lines, fileName)
 
-		klog.V(4).InfoS("feature file read", "fileName", fileName, "features", utils.DelayedDumper(fileFeatures))
+		slog.Info("feature file read", "fileName", fileName, "features", utils.DelayedDumper(fileFeatures))
 		for k, v := range fileFeatures {
 			if old, ok := features[k]; ok {
-				klog.InfoS("overriding label value from another feature file", "featureKey", k, "oldValue", old, "newValue", v, "fileName", fileName)
+				slog.Info("overriding label value from another feature file", "featureKey", k, "oldValue", old, "newValue", v, "fileName", fileName)
 			}
 			features[k] = v
 		}
 
 		for k, v := range fileLabels {
 			if old, ok := labels[k]; ok {
-				klog.InfoS("overriding label value from another feature file", "labelKey", k, "oldValue", old, "newValue", v, "fileName", fileName)
+				slog.Info("overriding label value from another feature file", "labelKey", k, "oldValue", old, "newValue", v, "fileName", fileName)
 			}
 			labels[k] = v
 		}
@@ -426,7 +426,7 @@ func getFileContent(fileName string) ([][]byte, error) {
 	path := filepath.Join(featureFilesDir, fileName)
 	filestat, err := os.Stat(path)
 	if err != nil {
-		klog.ErrorS(err, "failed to get filestat, skipping features file", "path", path)
+		slog.Error(err, "failed to get filestat, skipping features file", "path", path)
 		return lines, err
 	}
 

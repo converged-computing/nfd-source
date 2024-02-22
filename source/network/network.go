@@ -25,12 +25,12 @@ import (
 	"strings"
 	"syscall"
 
-	"k8s.io/klog/v2"
+	"golang.org/x/exp/slog"
 
-	nfdv1alpha1 "sigs.k8s.io/node-feature-discovery/pkg/apis/nfd/v1alpha1"
-	"sigs.k8s.io/node-feature-discovery/pkg/utils"
-	"sigs.k8s.io/node-feature-discovery/pkg/utils/hostpath"
-	"sigs.k8s.io/node-feature-discovery/source"
+	nfdv1alpha1 "github.com/converged-computing/nfd-source/pkg/apis/nfd/v1alpha1"
+	"github.com/converged-computing/nfd-source/pkg/utils"
+	"github.com/converged-computing/nfd-source/pkg/utils/hostpath"
+	"github.com/converged-computing/nfd-source/source"
 )
 
 // Name of this feature source
@@ -85,7 +85,7 @@ func (s *networkSource) GetLabels() (source.FeatureLabels, error) {
 			if v, ok := attrs[attr]; ok {
 				t, err := strconv.Atoi(v)
 				if err != nil {
-					klog.ErrorS(err, "failed to parse sriov attribute", "attributeName", attr, "deviceName", attrs["name"])
+					slog.Error(err, "failed to parse sriov attribute", "attributeName", attr, "deviceName", attrs["name"])
 					continue
 				}
 				if t > 0 {
@@ -108,7 +108,7 @@ func (s *networkSource) Discover() error {
 	s.features.Instances[DeviceFeature] = nfdv1alpha1.InstanceFeatureSet{Elements: devs}
 	s.features.Instances[VirtualFeature] = nfdv1alpha1.InstanceFeatureSet{Elements: virts}
 
-	klog.V(3).InfoS("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
+	slog.Info("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
 
 	return nil
 }
@@ -151,7 +151,7 @@ func readIfaceInfo(path string, attrFiles []string) nfdv1alpha1.InstanceFeature 
 		data, err := os.ReadFile(filepath.Join(path, attrFile))
 		if err != nil {
 			if !os.IsNotExist(err) && !errors.Is(err, syscall.EINVAL) {
-				klog.ErrorS(err, "failed to read net iface attribute", "attributeName", attrFile)
+				slog.Error(err, "failed to read net iface attribute", "attributeName", attrFile)
 			}
 			continue
 		}

@@ -22,7 +22,7 @@ package cpu
 import (
 	"os"
 
-	"sigs.k8s.io/node-feature-discovery/pkg/utils/hostpath"
+	"github.com/converged-computing/nfd-source/pkg/utils/hostpath"
 )
 
 func discoverSecurity() map[string]string {

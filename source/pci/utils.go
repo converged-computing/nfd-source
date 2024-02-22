@@ -22,10 +22,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"k8s.io/klog/v2"
+	"golang.org/x/exp/slog"
 
-	nfdv1alpha1 "sigs.k8s.io/node-feature-discovery/pkg/apis/nfd/v1alpha1"
-	"sigs.k8s.io/node-feature-discovery/pkg/utils/hostpath"
+	nfdv1alpha1 "github.com/converged-computing/nfd-source/pkg/apis/nfd/v1alpha1"
+	"github.com/converged-computing/nfd-source/pkg/utils/hostpath"
 )
 
 var mandatoryDevAttrs = []string{"class", "vendor", "device", "subsystem_vendor", "subsystem_device"}
@@ -83,7 +83,7 @@ func detectPci() ([]nfdv1alpha1.InstanceFeature, error) {
 	for _, device := range devices {
 		info, err := readPciDevInfo(filepath.Join(sysfsBasePath, device.Name()))
 		if err != nil {
-			klog.ErrorS(err, "failed to read PCI device info")
+			slog.Error(err, "failed to read PCI device info")
 			continue
 		}
 		devInfo = append(devInfo, *info)

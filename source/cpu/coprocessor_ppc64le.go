@@ -20,10 +20,11 @@ limitations under the License.
 package cpu
 
 import (
-	"k8s.io/klog/v2"
 	"os"
-	"sigs.k8s.io/node-feature-discovery/pkg/utils/hostpath"
 	"strconv"
+
+	"github.com/converged-computing/nfd-source/pkg/utils/hostpath"
+	"golang.org/x/exp/slog"
 )
 
 /* Detect NX_GZIP */
@@ -34,7 +35,7 @@ func discoverCoprocessor() map[string]string {
 
 	_, err := os.Stat(nxGzipPath)
 	if err != nil {
-		klog.V(5).ErrorS(err, "Failed to detect nx_gzip for Nest Accelerator")
+		slog.Error(err, "Failed to detect nx_gzip for Nest Accelerator")
 	} else {
 		features["nx_gzip"] = strconv.FormatBool(true)
 	}

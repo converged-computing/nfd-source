@@ -23,10 +23,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"k8s.io/klog/v2"
+	"golang.org/x/exp/slog"
 
-	nfdv1alpha1 "sigs.k8s.io/node-feature-discovery/pkg/apis/nfd/v1alpha1"
-	"sigs.k8s.io/node-feature-discovery/pkg/utils/hostpath"
+	nfdv1alpha1 "github.com/converged-computing/nfd-source/pkg/apis/nfd/v1alpha1"
+	"github.com/converged-computing/nfd-source/pkg/utils/hostpath"
 )
 
 var devAttrs = []string{"class", "vendor", "device", "serial"}
@@ -118,7 +118,7 @@ func detectUsb() ([]nfdv1alpha1.InstanceFeature, error) {
 	for _, devPath := range devPaths {
 		devs, err := readUsbDevInfo(filepath.Dir(devPath))
 		if err != nil {
-			klog.ErrorS(err, "failed to read USB device info")
+			slog.Error(err, "failed to read USB device info")
 			continue
 		}
 

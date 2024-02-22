@@ -18,11 +18,11 @@ package fake
 
 import (
 	"fmt"
+	"log/slog"
 
-	"k8s.io/klog/v2"
-	nfdv1alpha1 "sigs.k8s.io/node-feature-discovery/pkg/apis/nfd/v1alpha1"
-	"sigs.k8s.io/node-feature-discovery/pkg/utils"
-	"sigs.k8s.io/node-feature-discovery/source"
+	nfdv1alpha1 "github.com/converged-computing/nfd-source/pkg/apis/nfd/v1alpha1"
+	"github.com/converged-computing/nfd-source/pkg/utils"
+	"github.com/converged-computing/nfd-source/source"
 )
 
 // Name of this feature source
@@ -128,7 +128,7 @@ func (s *fakeSource) Discover() error {
 	}
 	s.features.Instances[InstanceFeature] = nfdv1alpha1.NewInstanceFeatures(instances)
 
-	klog.V(3).InfoS("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
+	slog.Info("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
 
 	return nil
 }

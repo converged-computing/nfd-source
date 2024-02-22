@@ -22,12 +22,12 @@ import (
 	"regexp"
 	"strings"
 
-	"k8s.io/klog/v2"
+	"golang.org/x/exp/slog"
 
-	nfdv1alpha1 "sigs.k8s.io/node-feature-discovery/pkg/apis/nfd/v1alpha1"
-	"sigs.k8s.io/node-feature-discovery/pkg/utils"
-	"sigs.k8s.io/node-feature-discovery/pkg/utils/hostpath"
-	"sigs.k8s.io/node-feature-discovery/source"
+	nfdv1alpha1 "github.com/converged-computing/nfd-source/pkg/apis/nfd/v1alpha1"
+	"github.com/converged-computing/nfd-source/pkg/utils"
+	"github.com/converged-computing/nfd-source/pkg/utils/hostpath"
+	"github.com/converged-computing/nfd-source/source"
 )
 
 var osReleaseFields = [...]string{
@@ -88,7 +88,7 @@ func (s *systemSource) Discover() error {
 	// Get os-release information
 	release, err := parseOSRelease()
 	if err != nil {
-		klog.ErrorS(err, "failed to get os-release")
+		slog.Error(err, "failed to get os-release")
 	} else {
 		s.features.Attributes[OsReleaseFeature] = nfdv1alpha1.NewAttributeFeatures(release)
 
@@ -108,7 +108,7 @@ func (s *systemSource) Discover() error {
 	for _, name := range dmiIDAttributeNames {
 		val, err := getDmiIDAttribute(name)
 		if err != nil {
-			klog.ErrorS(err, "failed to get DMI entry", "attributeName", name)
+			slog.Error(err, "failed to get DMI entry", "attributeName", name)
 		} else {
 			dmiAttrs[name] = val
 		}
@@ -118,7 +118,7 @@ func (s *systemSource) Discover() error {
 		s.features.Attributes[DmiIdFeature] = nfdv1alpha1.NewAttributeFeatures(dmiAttrs)
 	}
 
-	klog.V(3).InfoS("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
+	slog.Info("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
 
 	return nil
 }

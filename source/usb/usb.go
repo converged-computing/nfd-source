@@ -21,11 +21,11 @@ import (
 	"strings"
 
 	"golang.org/x/exp/maps"
-	"k8s.io/klog/v2"
+	"golang.org/x/exp/slog"
 
-	nfdv1alpha1 "sigs.k8s.io/node-feature-discovery/pkg/apis/nfd/v1alpha1"
-	"sigs.k8s.io/node-feature-discovery/pkg/utils"
-	"sigs.k8s.io/node-feature-discovery/source"
+	nfdv1alpha1 "github.com/converged-computing/nfd-source/pkg/apis/nfd/v1alpha1"
+	"github.com/converged-computing/nfd-source/pkg/utils"
+	"github.com/converged-computing/nfd-source/source"
 )
 
 // Name of this feature source
@@ -106,11 +106,11 @@ func (s *usbSource) GetLabels() (source.FeatureLabels, error) {
 		}
 	}
 	if len(configLabelFields) > 0 {
-		klog.InfoS("ignoring invalid fields in deviceLabelFields", "invalidFieldNames", maps.Keys(configLabelFields))
+		slog.Info("ignoring invalid fields in deviceLabelFields", "invalidFieldNames", maps.Keys(configLabelFields))
 	}
 	if len(deviceLabelFields) == 0 {
 		deviceLabelFields = defaultDeviceLabelFields()
-		klog.InfoS("no valid fields in deviceLabelFields defined, using the defaults", "defaultFieldNames", deviceLabelFields)
+		slog.Info("no valid fields in deviceLabelFields defined, using the defaults", "defaultFieldNames", deviceLabelFields)
 	}
 
 	// Iterate over all device classes
@@ -144,7 +144,7 @@ func (s *usbSource) Discover() error {
 	}
 	s.features.Instances[DeviceFeature] = nfdv1alpha1.NewInstanceFeatures(devs)
 
-	klog.V(3).InfoS("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
+	slog.Info("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
 
 	return nil
 }
