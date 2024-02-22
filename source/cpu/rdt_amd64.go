@@ -21,6 +21,7 @@ package cpu
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -105,26 +106,26 @@ func discoverRDT() map[string]string {
 func getNumClosID(level string) int64 {
 	resctrlRootDir, err := intelrdt.Root()
 	if err != nil {
-		slog.Error(err, "can't find resctrl filesystem")
+		slog.Any("can't find resctrl filesystem", err)
 		return -1
 	}
 
 	closidFile := filepath.Join(resctrlRootDir, "info", level, "num_closids")
 
 	if _, err := os.Stat(closidFile); err != nil {
-		slog.Error(err, "failed to stat file", "path", closidFile)
+		slog.Any(fmt.Sprintf("failed to stat file path %s", closidFile), err)
 		return -1
 	}
 
 	closidsBytes, err := os.ReadFile(filepath.Join(resctrlRootDir, "info", level, "num_closids"))
 	if err != nil {
-		slog.Error(err, "failed to read file", "path", closidFile)
+		slog.Any(fmt.Sprintf("failed to read file path %s", closidFile), err)
 		return -1
 	}
 
 	numClosIDs, err := strconv.ParseInt(string(bytes.TrimSpace(closidsBytes)), 10, 64)
 	if err != nil {
-		slog.Error(err, "failed to parse num_closids", "value", string(bytes.TrimSpace(closidsBytes)))
+		slog.Any(fmt.Sprintf("failed to parse num_closids value %s", string(bytes.TrimSpace(closidsBytes))), err)
 		return -1
 	}
 

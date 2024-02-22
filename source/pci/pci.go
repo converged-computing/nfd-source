@@ -103,7 +103,7 @@ func (s *pciSource) GetLabels() (source.FeatureLabels, error) {
 		}
 	}
 	if len(configLabelFields) > 0 {
-		slog.InfoS("ignoring invalid fields in deviceLabelFields", "invalidFieldNames", maps.Keys(configLabelFields))
+		slog.Info("ignoring invalid fields in deviceLabelFields", "invalidFieldNames", maps.Keys(configLabelFields))
 	}
 	if len(deviceLabelFields) == 0 {
 		deviceLabelFields = []string{"class", "vendor"}

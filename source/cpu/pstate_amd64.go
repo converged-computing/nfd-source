@@ -55,7 +55,7 @@ func detectPstate() (map[string]string, error) {
 	// Check turbo boost
 	bytes, err := os.ReadFile(filepath.Join(pstateDir, "no_turbo"))
 	if err != nil {
-		slog.Error(err, "can't detect whether turbo boost is enabled")
+		slog.Any("can't detect whether turbo boost is enabled", err)
 	} else {
 		features["turbo"] = "false"
 		if bytes[0] == byte('0') {
@@ -72,7 +72,7 @@ func detectPstate() (map[string]string, error) {
 	cpufreqDir := filepath.Join(sysfsBase, "cpufreq")
 	policies, err := os.ReadDir(cpufreqDir)
 	if err != nil {
-		slog.Error(err, "failed to read cpufreq directory")
+		slog.Any("failed to read cpufreq directory", err)
 		return features, nil
 	}
 

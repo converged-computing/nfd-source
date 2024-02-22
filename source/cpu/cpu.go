@@ -212,7 +212,7 @@ func (s *cpuSource) Discover() error {
 	// Detect cstate configuration
 	cstate, err := detectCstate()
 	if err != nil {
-		slog.Error(err, "failed to detect cstate")
+		slog.Any("failed to detect cstate", err)
 	} else {
 		s.features.Attributes[CstateFeature] = nfdv1alpha1.NewAttributeFeatures(cstate)
 	}
@@ -220,7 +220,7 @@ func (s *cpuSource) Discover() error {
 	// Detect pstate features
 	pstate, err := detectPstate()
 	if err != nil {
-		slog.Error(err, "failed to detect pstate")
+		slog.Any("failed to detect pstate", err)
 	}
 	s.features.Attributes[PstateFeature] = nfdv1alpha1.NewAttributeFeatures(pstate)
 
@@ -266,7 +266,7 @@ func discoverTopology() map[string]string {
 
 	files, err := os.ReadDir(hostpath.SysfsDir.Path("bus/cpu/devices"))
 	if err != nil {
-		slog.Error(err, "failed to read devices folder")
+		slog.Any("failed to read devices folder", err)
 		return features
 	}
 
@@ -278,7 +278,7 @@ func discoverTopology() map[string]string {
 		// Try to read siblings from topology
 		siblings, err := os.ReadFile(hostpath.SysfsDir.Path("bus/cpu/devices", file.Name(), "topology/thread_siblings_list"))
 		if err != nil {
-			slog.Error(err, "error while reading thread_sigblings_list file")
+			slog.Any("error while reading thread_sigblings_list file", err)
 			return map[string]string{}
 		}
 		for _, char := range siblings {
@@ -292,7 +292,7 @@ func discoverTopology() map[string]string {
 		// Try to read physical_package_id from topology
 		physicalID, err := os.ReadFile(hostpath.SysfsDir.Path("bus/cpu/devices", file.Name(), "topology/physical_package_id"))
 		if err != nil {
-			slog.Error(err, "error while reading physical_package_id file")
+			slog.Any("error while reading physical_package_id file", err)
 			return map[string]string{}
 		}
 		id := strings.TrimSpace(string(physicalID))

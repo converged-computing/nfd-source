@@ -123,7 +123,7 @@ func (s *kernelSource) Discover() error {
 
 	// Read kernel version
 	if version, err := discoverVersion(); err != nil {
-		slog.Error(err, "failed to get kernel version")
+		slog.Any("failed to get kernel version", err)
 	} else {
 		s.features.Attributes[VersionFeature] = nfdv1alpha1.NewAttributeFeatures(version)
 	}
@@ -131,7 +131,7 @@ func (s *kernelSource) Discover() error {
 	// Read kconfig
 	if realKconfig, legacyKconfig, err := parseKconfig(s.config.KconfigFile); err != nil {
 		s.legacyKconfig = nil
-		slog.Error(err, "failed to read kconfig")
+		slog.Any("failed to read kconfig", err)
 	} else {
 		s.features.Attributes[ConfigFeature] = nfdv1alpha1.NewAttributeFeatures(realKconfig)
 		s.legacyKconfig = legacyKconfig
@@ -139,27 +139,27 @@ func (s *kernelSource) Discover() error {
 
 	var enabledModules []string
 	if kmods, err := getLoadedModules(); err != nil {
-		slog.Error(err, "failed to get loaded kernel modules")
+		slog.Any("failed to get loaded kernel modules", err)
 	} else {
 		enabledModules = append(enabledModules, kmods...)
 		s.features.Flags[LoadedModuleFeature] = nfdv1alpha1.NewFlagFeatures(kmods...)
 	}
 
 	if builtinMods, err := getBuiltinModules(); err != nil {
-		slog.Error(err, "failed to get builtin kernel modules")
+		slog.Any("failed to get builtin kernel modules", err)
 	} else {
 		enabledModules = append(enabledModules, builtinMods...)
 		s.features.Flags[EnabledModuleFeature] = nfdv1alpha1.NewFlagFeatures(enabledModules...)
 	}
 
 	if selinux, err := SelinuxEnabled(); err != nil {
-		slog.Error(err, "failed to detect selinux status")
+		slog.Any("failed to detect selinux status", err)
 	} else {
 		s.features.Attributes[SelinuxFeature] = nfdv1alpha1.NewAttributeFeatures(nil)
 		s.features.Attributes[SelinuxFeature].Elements["enabled"] = strconv.FormatBool(selinux)
 	}
 
-	slog.InfoS("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
+	slog.Info("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
 
 	return nil
 }

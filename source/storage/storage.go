@@ -116,7 +116,7 @@ func readBlockDevQueueInfo(path string) *nfdv1alpha1.InstanceFeature {
 	for _, attrName := range queueAttrs {
 		data, err := os.ReadFile(filepath.Join(path, "queue", attrName))
 		if err != nil {
-			slog.Error(err, "failed to read block device queue attribute", "attributeName", attrName)
+			slog.Any(fmt.Sprintf("failed to read block device queue attribute attributeName %s", attrName), err)
 			continue
 		}
 		attrs[attrName] = strings.TrimSpace(string(data))

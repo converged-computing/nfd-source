@@ -138,7 +138,7 @@ func (s *localSource) Discover() error {
 
 	featuresFromFiles, labelsFromFiles, err := getFeaturesFromFiles()
 	if err != nil {
-		slog.Error(err, "failed to read feature files")
+		slog.Any("failed to read feature files", err)
 	}
 
 	if s.config.HooksEnabled {
@@ -148,7 +148,7 @@ func (s *localSource) Discover() error {
 
 		featuresFromHooks, labelsFromHooks, err := getFeaturesFromHooks()
 		if err != nil {
-			slog.Error(err, "failed to run hooks")
+			slog.Any("failed to run hooks", err)
 		}
 
 		// Merge features from hooks and files
@@ -233,7 +233,7 @@ func parseFeatureFile(lines [][]byte, fileName string) (map[string]string, map[s
 				// Parse directives
 				err := parseDirectives(line, parsingOpts)
 				if err != nil {
-					slog.ErroS(err, "error while parsing directives", "fileName", fileName)
+					slog.Any(fmt.Sprintf("error while parsing directives fileName", fileName), err)
 				}
 
 				continue
@@ -305,13 +305,13 @@ func getFeaturesFromHooks() (map[string]string, map[string]string, error) {
 		}
 		lines, err := runHook(fileName)
 		if err != nil {
-			slog.Error(err, "failed to run hook", "fileName", fileName)
+			slog.Any(fmt.Sprintf("failed to run hook fileName %s", fileName), err)
 			continue
 		}
 
 		// Append features
 		fileFeatures, fileLabels := parseFeatureFile(lines, fileName)
-		slog.InfoS("hook executed", "fileName", fileName, "features", utils.DelayedDumper(fileFeatures), "labels", utils.DelayedDumper(fileLabels))
+		slog.Info("hook executed", "fileName", fileName, "features", utils.DelayedDumper(fileFeatures), "labels", utils.DelayedDumper(fileLabels))
 		for k, v := range fileFeatures {
 			if old, ok := features[k]; ok {
 				slog.Info("overriding feature value from another hook", "featureKey", k, "oldValue", old, "newValue", v, "fileName", fileName)
@@ -337,7 +337,7 @@ func runHook(file string) ([][]byte, error) {
 	path := filepath.Join(hookDir, file)
 	filestat, err := os.Stat(path)
 	if err != nil {
-		slog.Error(err, "failed to get filestat, skipping hook", "path", path)
+		slog.Any(fmt.Sprintf("failed to get filestat, skipping hook path %s", path), err)
 		return lines, err
 	}
 
@@ -393,7 +393,7 @@ func getFeaturesFromFiles() (map[string]string, map[string]string, error) {
 		}
 		lines, err := getFileContent(fileName)
 		if err != nil {
-			slog.Error(err, "failed to read file", "fileName", fileName)
+			slog.Any(fmt.Sprintf("failed to read file fileName %s", fileName), err)
 			continue
 		}
 
@@ -426,7 +426,7 @@ func getFileContent(fileName string) ([][]byte, error) {
 	path := filepath.Join(featureFilesDir, fileName)
 	filestat, err := os.Stat(path)
 	if err != nil {
-		slog.Error(err, "failed to get filestat, skipping features file", "path", path)
+		slog.Any(fmt.Sprintf("failed to get filestat, skipping features file path %s", path), err)
 		return lines, err
 	}
 
