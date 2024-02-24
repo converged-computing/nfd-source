@@ -145,7 +145,7 @@ func (s *pciSource) Discover() error {
 	}
 	s.features.Instances[DeviceFeature] = nfdv1alpha1.NewInstanceFeatures(devs)
 
-	slog.Info("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
+	slog.Debug("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
 
 	return nil
 }

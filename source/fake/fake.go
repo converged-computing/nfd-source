@@ -128,7 +128,7 @@ func (s *fakeSource) Discover() error {
 	}
 	s.features.Instances[InstanceFeature] = nfdv1alpha1.NewInstanceFeatures(instances)
 
-	slog.Info("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
+	slog.Debug("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
 
 	return nil
 }
