@@ -99,7 +99,7 @@ func (s *memorySource) Discover() error {
 		s.features.Instances[NvFeature] = nfdv1alpha1.InstanceFeatureSet{Elements: nv}
 	}
 
-	slog.Info("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
+	slog.Debug("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
 
 	return nil
 }

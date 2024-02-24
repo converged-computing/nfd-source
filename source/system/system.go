@@ -122,7 +122,7 @@ func (s *systemSource) Discover() error {
 		s.features.Attributes[DmiIdFeature] = nfdv1alpha1.NewAttributeFeatures(dmiAttrs)
 	}
 
-	slog.Info("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
+	slog.Debug("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
 
 	return nil
 }

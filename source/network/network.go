@@ -108,7 +108,7 @@ func (s *networkSource) Discover() error {
 	s.features.Instances[DeviceFeature] = nfdv1alpha1.InstanceFeatureSet{Elements: devs}
 	s.features.Instances[VirtualFeature] = nfdv1alpha1.InstanceFeatureSet{Elements: virts}
 
-	slog.Info("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
+	slog.Debug("discovered features", "featureSource", s.Name(), "features", utils.DelayedDumper(s.features))
 
 	return nil
 }
